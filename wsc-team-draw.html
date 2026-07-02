@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSC 2026 · Team Draw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --sea:#0E4DD6;        /* adriatic blue */
+    --sea-deep:#0A2FA0;
+    --sun:#FFD23C;        /* sun yellow */
+    --coral:#FF5A45;      /* coral accent */
+    --navy:#0B1B33;       /* ink */
+    --mint:#25D08C;       /* pixel green for "locked" */
+    --sand:#FFF4D6;
+    --px: 4px;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{ height:100%; }
+
+  body{
+    background:var(--paper);
+    color:var(--navy);
+    font-family:'Space Grotesk', sans-serif;
+    overflow-x:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+
+  .pixel{ font-family:'Press Start 2P', monospace; }
+
+  /* ---------- header ---------- */
+  header{
+    padding:28px 24px 8px;
+    text-align:center;
+    position:relative;
+    z-index:3;
+  }
+  .eyebrow{
+    display:inline-block;
+    font-family:'Press Start 2P', monospace;
+    font-size:10px;
+    letter-spacing:1px;
+    color:var(--paper);
+    background:var(--sea);
+    padding:8px 12px;
+    box-shadow:var(--px) var(--px) 0 var(--navy);
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(20px, 4.5vw, 40px);
+    line-height:1.4;
+    text-transform:uppercase;
+  }
+  h1 .hl{ color:var(--sea); }
+  h1 .cursor{
+    display:inline-block;
+    width:0.55em; height:0.12em;
+    background:var(--coral);
+    vertical-align:baseline;
+    margin-left:4px;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+  .sub{
+    margin-top:14px;
+    font-size:15px;
+    color:#4A5A73;
+  }
+
+  /* ---------- pixel sun ---------- */
+  .sun{
+    position:absolute;
+    top:22px; right:6vw;
+    width:64px; height:64px;
+    image-rendering:pixelated;
+    animation:bob 3s steps(6) infinite;
+    z-index:1;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translateY(0) }
+    50%{ transform:translateY(-8px) }
+  }
+
+  /* ---------- board ---------- */
+  main{
+    flex:1;
+    width:min(1060px, 100%);
+    margin:0 auto;
+    padding:26px 20px 40px;
+    position:relative;
+    z-index:3;
+  }
+
+  .pool{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:30px;
+  }
+  .pool-label{
+    width:100%;
+    text-align:center;
+    font-family:'Press Start 2P', monospace;
+    font-size:9px;
+    color:#7A879B;
+    margin-bottom:2px;
+    letter-spacing:1px;
+  }
+  .chip{
+    font-family:'Press Start 2P', monospace;
+    font-size:9px;
+    line-height:1.6;
+    padding:8px 10px;
+    background:var(--sand);
+    border:3px solid var(--navy);
+    box-shadow:3px 3px 0 var(--navy);
+    transition:opacity .3s, transform .3s;
+  }
+  .chip.taken{
+    opacity:.25;
+    transform:scale(.92);
+    text-decoration:line-through;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:22px;
+  }
+  @media (max-width:640px){
+    .grid{ grid-template-columns:1fr; }
+    .sun{ width:44px; height:44px; right:4vw; top:14px; }
+  }
+
+  /* ---------- team card ---------- */
+  .card{
+    background:var(--paper);
+    border:4px solid var(--navy);
+    box-shadow:8px 8px 0 var(--navy);
+    padding:22px 20px 24px;
+    position:relative;
+    transition:transform .15s steps(2);
+  }
+  .card:hover{ transform:translate(-2px,-2px); }
+  .card.locked{ border-color:var(--sea); box-shadow:8px 8px 0 var(--sea); }
+
+  .card-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .team-name{
+    font-family:'Press Start 2P', monospace;
+    font-size:14px;
+  }
+  .badge{
+    width:20px; height:20px;
+    image-rendering:pixelated;
+  }
+
+  .screen{
+    background:var(--navy);
+    color:var(--sun);
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(10px, 1.6vw, 13px);
+    line-height:1.7;
+    min-height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:14px 12px;
+    border:3px solid var(--navy);
+    outline:3px solid var(--sun);
+    outline-offset:-9px;
+    margin-bottom:18px;
+    word-break:break-word;
+  }
+  .screen.idle{ color:#5E7BB8; }
+  .screen.spinning{ color:var(--paper); animation:jitter .12s steps(2) infinite; }
+  .screen.done{ color:var(--mint); outline-color:var(--mint); }
+  @keyframes jitter{
+    0%{ transform:translate(0,0) }
+    50%{ transform:translate(1px,-1px) }
+    100%{ transform:translate(-1px,1px) }
+  }
+
+  .draw-btn{
+    width:100%;
+    font-family:'Press Start 2P', monospace;
+    font-size:12px;
+    padding:15px 10px;
+    background:var(--sun);
+    color:var(--navy);
+    border:4px solid var(--navy);
+    box-shadow:0 6px 0 var(--navy);
+    cursor:pointer;
+    text-transform:uppercase;
+    transition:none;
+  }
+  .draw-btn:hover:not(:disabled){ background:var(--coral); color:var(--paper); }
+  .draw-btn:active:not(:disabled){ transform:translateY(6px); box-shadow:0 0 0 var(--navy); }
+  .draw-btn:focus-visible{ outline:4px dashed var(--sea); outline-offset:4px; }
+  .draw-btn:disabled{
+    background:#E4E9F2;
+    color:#9AA6B8;
+    cursor:default;
+    box-shadow:0 6px 0 #9AA6B8;
+    border-color:#9AA6B8;
+  }
+  .draw-btn.locked-btn{
+    background:var(--mint);
+    color:var(--navy);
+    border-color:var(--navy);
+    box-shadow:0 6px 0 var(--navy);
+  }
+
+  /* ---------- footer controls ---------- */
+  .controls{
+    text-align:center;
+    margin-top:34px;
+    min-height:80px;
+  }
+  .banner{
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(11px, 2vw, 16px);
+    line-height:1.8;
+    color:var(--sea);
+    margin-bottom:18px;
+    display:none;
+  }
+  .reset-btn{
+    font-family:'Press Start 2P', monospace;
+    font-size:10px;
+    padding:12px 18px;
+    background:var(--paper);
+    color:var(--navy);
+    border:3px solid var(--navy);
+    box-shadow:4px 4px 0 var(--navy);
+    cursor:pointer;
+  }
+  .reset-btn:hover{ background:var(--sand); }
+  .reset-btn:active{ transform:translate(4px,4px); box-shadow:0 0 0 var(--navy); }
+  .reset-btn:focus-visible{ outline:3px dashed var(--sea); outline-offset:3px; }
+
+  /* ---------- pixel sea ---------- */
+  .sea{
+    position:relative;
+    height:96px;
+    margin-top:auto;
+    background:var(--sea);
+    overflow:hidden;
+  }
+  .wave{
+    position:absolute;
+    left:0; top:-12px;
+    width:200%;
+    height:24px;
+    background:
+      repeating-linear-gradient(to right,
+        var(--paper) 0 12px, transparent 12px 24px);
+    animation:drift 6s steps(24) infinite linear;
+  }
+  .wave.two{
+    top:auto; bottom:26px;
+    background:repeating-linear-gradient(to right,
+      var(--sea-deep) 0 16px, transparent 16px 32px);
+    height:12px;
+    animation-duration:9s;
+    animation-direction:reverse;
+    opacity:.8;
+  }
+  @keyframes drift{
+    from{ transform:translateX(0) }
+    to{ transform:translateX(-25%) }
+  }
+  .boat{
+    position:absolute;
+    bottom:34px; left:12%;
+    width:48px; height:32px;
+    image-rendering:pixelated;
+    animation:sail 26s linear infinite, bob 2.4s steps(4) infinite;
+  }
+  @keyframes sail{
+    from{ left:-60px }
+    to{ left:105% }
+  }
+  .sea-credit{
+    position:absolute;
+    bottom:10px; width:100%;
+    text-align:center;
+    font-family:'Press Start 2P', monospace;
+    font-size:8px;
+    color:rgba(255,255,255,.75);
+    letter-spacing:1px;
+  }
+
+  /* ---------- confetti ---------- */
+  .confetti{
+    position:fixed;
+    width:8px; height:8px;
+    z-index:50;
+    pointer-events:none;
+    image-rendering:pixelated;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sun, .boat, .wave, .screen.spinning, h1 .cursor{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="sun" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+    <rect x="5" y="5" width="6" height="6" fill="#FFD23C"/>
+    <rect x="4" y="6" width="1" height="4" fill="#FFD23C"/><rect x="11" y="6" width="1" height="4" fill="#FFD23C"/>
+    <rect x="6" y="4" width="4" height="1" fill="#FFD23C"/><rect x="6" y="11" width="4" height="1" fill="#FFD23C"/>
+    <rect x="7" y="1" width="2" height="2" fill="#FF5A45"/><rect x="7" y="13" width="2" height="2" fill="#FF5A45"/>
+    <rect x="1" y="7" width="2" height="2" fill="#FF5A45"/><rect x="13" y="7" width="2" height="2" fill="#FF5A45"/>
+    <rect x="3" y="3" width="1" height="1" fill="#FF5A45"/><rect x="12" y="3" width="1" height="1" fill="#FF5A45"/>
+    <rect x="3" y="12" width="1" height="1" fill="#FF5A45"/><rect x="12" y="12" width="1" height="1" fill="#FF5A45"/>
+  </svg>
+
+  <span class="eyebrow">WEB SUMMER CAMP 2026 · OPATIJA</span>
+  <h1>TEAM <span class="hl">DRAW</span><span class="cursor"></span></h1>
+  <p class="sub">press draw and let the machine deal your team its AI theme, no takebacks</p>
+</header>
+
+<main>
+  <div class="pool" id="pool" aria-label="Themes remaining">
+    <span class="pool-label">THEMES IN THE POOL</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="controls">
+    <p class="banner" id="banner">ALL TEAMS LOCKED IN ★ GO BUILD SOMETHING SUNNY</p>
+    <button class="reset-btn" id="reset" hidden>↺ RESET DRAW</button>
+  </div>
+</main>
+
+<div class="sea" aria-hidden="true">
+  <div class="wave"></div>
+  <div class="wave two"></div>
+  <svg class="boat" viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+    <rect x="11" y="1" width="1" height="9" fill="#0B1B33"/>
+    <rect x="12" y="2" width="6" height="1" fill="#FF5A45"/>
+    <rect x="12" y="3" width="5" height="1" fill="#FF5A45"/>
+    <rect x="12" y="4" width="4" height="1" fill="#FF5A45"/>
+    <rect x="12" y="5" width="3" height="1" fill="#FF5A45"/>
+    <rect x="12" y="6" width="2" height="1" fill="#FF5A45"/>
+    <rect x="5" y="2" width="1" height="1" fill="#FFD23C"/>
+    <rect x="4" y="3" width="2" height="1" fill="#FFD23C"/>
+    <rect x="3" y="4" width="3" height="1" fill="#FFD23C"/>
+    <rect x="3" y="5" width="4" height="1" fill="#FFD23C"/>
+    <rect x="2" y="6" width="5" height="1" fill="#FFD23C"/>
+    <rect x="2" y="7" width="6" height="1" fill="#FFD23C"/>
+    <rect x="2" y="10" width="20" height="2" fill="#FFFFFF"/>
+    <rect x="4" y="12" width="16" height="2" fill="#E4E9F2"/>
+  </svg>
+  <div class="sea-credit">#WEBSC · JULY 2 – 4 · SEA STATE: EXCELLENT</div>
+</div>
+
+<script>
+(function(){
+  const TEAMS  = ['TEAM 01','TEAM 02','TEAM 03','TEAM 04'];
+  const THEMES = ['AI MUSIC STUDIO','AI READING ASSISTANT','AI MUSEUM SIDEKICK','AI FINANCE ANALYSIS'];
+  const COLORS = ['#0E4DD6','#FFD23C','#FF5A45','#25D08C'];
+
+  const grid   = document.getElementById('grid');
+  const pool   = document.getElementById('pool');
+  const banner = document.getElementById('banner');
+  const reset  = document.getElementById('reset');
+
+  let remaining, spinningCount, assignedCount;
+
+  /* tiny 8-bit beeps */
+  let ctx = null;
+  function beep(freq, dur, type){
+    try{
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'square';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.06, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + dur);
+    }catch(e){}
+  }
+  function fanfare(){
+    beep(523,.12); setTimeout(()=>beep(659,.12),110);
+    setTimeout(()=>beep(784,.2),220); setTimeout(()=>beep(1047,.3),340);
+  }
+
+  function pixelBadge(color){
+    return '<svg class="badge" viewBox="0 0 8 8" shape-rendering="crispEdges">' +
+      '<rect x="2" y="0" width="4" height="1" fill="'+color+'"/>' +
+      '<rect x="1" y="1" width="6" height="1" fill="'+color+'"/>' +
+      '<rect x="0" y="2" width="8" height="3" fill="'+color+'"/>' +
+      '<rect x="1" y="5" width="6" height="1" fill="'+color+'"/>' +
+      '<rect x="2" y="6" width="4" height="1" fill="'+color+'"/>' +
+      '<rect x="3" y="3" width="2" height="1" fill="#FFFFFF"/></svg>';
+  }
+
+  function buildPool(){
+    pool.querySelectorAll('.chip').forEach(c=>c.remove());
+    THEMES.forEach(t=>{
+      const s = document.createElement('span');
+      s.className = 'chip';
+      s.dataset.theme = t;
+      s.textContent = t;
+      pool.appendChild(s);
+    });
+  }
+
+  function buildCards(){
+    grid.innerHTML = '';
+    TEAMS.forEach((team,i)=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="card-top"><span class="team-name">'+team+'</span>'+pixelBadge(COLORS[i])+'</div>' +
+        '<div class="screen idle" role="status">? ? ? ? ?</div>' +
+        '<button class="draw-btn">▶ DRAW</button>';
+      grid.appendChild(card);
+
+      const btn = card.querySelector('.draw-btn');
+      const screen = card.querySelector('.screen');
+      btn.addEventListener('click', ()=> spin(card, screen, btn));
+    });
+  }
+
+  function spin(card, screen, btn){
+    if(!remaining.length) return;
+    btn.disabled = true;
+    spinningCount++;
+    setOtherButtons();
+    screen.classList.remove('idle');
+    screen.classList.add('spinning');
+
+    const result = remaining.splice(Math.floor(Math.random()*remaining.length),1)[0];
+    let ticks = 0;
+    const total = 16 + Math.floor(Math.random()*6);
+
+    const iv = setInterval(()=>{
+      const flashPool = remaining.length ? remaining.concat([result]) : [result];
+      screen.textContent = flashPool[Math.floor(Math.random()*flashPool.length)];
+      beep(300 + Math.random()*500, .04);
+      ticks++;
+      if(ticks >= total){
+        clearInterval(iv);
+        lock(card, screen, btn, result);
+      }
+    }, 90);
+  }
+
+  function lock(card, screen, btn, result){
+    screen.classList.remove('spinning');
+    screen.classList.add('done');
+    screen.textContent = result;
+    card.classList.add('locked');
+    btn.classList.add('locked-btn');
+    btn.textContent = '★ LOCKED';
+    spinningCount--;
+    assignedCount++;
+    fanfare();
+    confettiBurst(card);
+
+    const chip = pool.querySelector('.chip[data-theme="'+result+'"]');
+    if(chip) chip.classList.add('taken');
+
+    if(assignedCount === TEAMS.length){
+      banner.style.display = 'block';
+      reset.hidden = false;
+    }else{
+      setOtherButtons();
+    }
+  }
+
+  function setOtherButtons(){
+    // keep every un-drawn button enabled unless a spin is in flight
+    grid.querySelectorAll('.card').forEach(c=>{
+      const b = c.querySelector('.draw-btn');
+      if(c.classList.contains('locked')) return;
+      b.disabled = spinningCount > 0;
+    });
+  }
+
+  function confettiBurst(card){
+    const rect = card.getBoundingClientRect();
+    for(let i=0;i<26;i++){
+      const p = document.createElement('div');
+      p.className = 'confetti';
+      p.style.background = COLORS[i % COLORS.length];
+      const x = rect.left + rect.width/2;
+      const y = rect.top + 30;
+      p.style.left = x+'px'; p.style.top = y+'px';
+      document.body.appendChild(p);
+      const dx = (Math.random()-0.5)*260;
+      const dy = 120 + Math.random()*220;
+      const rot = Math.random()*720 - 360;
+      p.animate([
+        { transform:'translate(0,0) rotate(0deg)', opacity:1 },
+        { transform:'translate('+dx+'px,'+dy+'px) rotate('+rot+'deg)', opacity:0 }
+      ], { duration:900 + Math.random()*500, easing:'steps(10)' })
+      .onfinish = ()=> p.remove();
+    }
+  }
+
+  function init(){
+    remaining = THEMES.slice();
+    spinningCount = 0;
+    assignedCount = 0;
+    banner.style.display = 'none';
+    reset.hidden = true;
+    buildPool();
+    buildCards();
+  }
+
+  reset.addEventListener('click', ()=>{ beep(200,.1); init(); });
+  init();
+})();
+</script>
+</body>
+</html>
